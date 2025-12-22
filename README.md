@@ -18,7 +18,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-api-response = "0.1"
+apiresponse = "0.1"
 thiserror = "1.0"  # For error definitions
 ```
 
@@ -26,7 +26,7 @@ For web framework integration:
 
 ```toml
 [dependencies]
-api-response = { version = "0.1", features = ["axum"] }  # or "actix", "poem"
+apiresponse = { version = "0.1", features = ["axum"] }  # or "actix", "poem"
 ```
 
 ## Quick Start
@@ -71,7 +71,7 @@ println!("{}", error.http_status_code());
 ### 3. Convert to API Response
 
 ```rust
-use api_response::ApiResponse;
+use apiresponse::ApiResponse;
 
 // Method 1: From error
 let response = ApiResponse::from_error(error);
@@ -249,7 +249,7 @@ pub enum AppError {
 
 ```rust
 use axum::{routing::get, Router};
-use api_response::ApiResponse;
+use apiresponse::ApiResponse;
 
 async fn handler() -> ApiResponse {
     // ApiResponse automatically implements IntoResponse
@@ -264,7 +264,7 @@ let app = Router::new().route("/user", get(handler));
 
 ```rust
 use actix_web::{get, HttpResponse};
-use api_response::ApiResponse;
+use apiresponse::ApiResponse;
 
 #[get("/user")]
 async fn handler() -> ApiResponse {
