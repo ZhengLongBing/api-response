@@ -1,10 +1,12 @@
 [package]
 name = "apiresponse"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 description = "A flexible API response wrapper with framework-agnostic support"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/loongsoldier/apiresponse"
+documentation = "https://docs.rs/apiresponse"
+readme = "README.md"
 keywords = ["api", "response", "axum", "actix", "poem"]
 categories = ["web-programming"]
 
@@ -14,7 +16,7 @@ axum = ["dep:axum"]
 full = ["axum"]
 
 [dependencies]
-apiresponse-macro = { version = "0.2.1", path = "../apiresponse-macro" }
+apiresponse-macro = { version = "0.2.2", path = "../apiresponse-macro" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

@@ -217,7 +217,7 @@ dependencies = [
 
 [[package]]
 name = "apiresponse"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "actix-web",
  "apiresponse-macro",
@@ -230,7 +230,7 @@ dependencies = [
 
 [[package]]
 name = "apiresponse-macro"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "proc-macro2",
  "quote",
