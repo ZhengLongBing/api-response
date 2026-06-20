@@ -1,6 +1,6 @@
 [package]
 name = "apiresponse-macro"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2024"
 description = "Derive macros for apiresponse"
 license = "MIT OR Apache-2.0"

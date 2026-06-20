@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
-use typed_builder::TypedBuilder;
+
 // Re-export the derive macro
 pub use apiresponse_macro::Response;
 
@@ -8,28 +8,9 @@ pub trait Response: Display {
     /// Returns the error code for this error type.
     fn error_code(&self) -> u64;
 
-    /// Returns the module path (e.g., "auth.login").
-    /// Defaults to empty string if no module is defined.
-    fn module_path(&self) -> &'static str {
-        ""
-    }
-
-    /// Returns the raw error message without module prefix.
-    /// Defaults to the Display implementation.
-    fn raw_message(&self) -> String {
-        self.to_string()
-    }
-
-    /// Returns the formatted error message with module prefix.
-    /// Format: "[module] message"
-    /// If no module path, returns raw message.
+    /// Returns the error message via the Display implementation.
     fn message(&self) -> String {
-        let module = self.module_path();
-        if module.is_empty() {
-            self.raw_message()
-        } else {
-            format!("[{}] {}", module, self.raw_message())
-        }
+        self.to_string()
     }
 
     /// Returns the HTTP status code for this error type.
@@ -39,25 +20,24 @@ pub trait Response: Display {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse {
-    #[builder(default = 0)]
     pub code: u64,
-
-    #[builder(default = "OK".to_string())]
     pub message: String,
-
-    #[builder(default = serde_json::Value::default())]
     pub data: serde_json::Value,
 
     #[serde(skip)]
-    #[builder(default = 200)]
     pub status_code: u16,
 }
 
 impl Default for ApiResponse {
     fn default() -> Self {
-        Self::builder().build()
+        Self {
+            code: 0,
+            message: "OK".to_string(),
+            data: serde_json::Value::Null,
+            status_code: 200,
+        }
     }
 }
 
@@ -76,6 +56,16 @@ impl ApiResponse {
     pub fn ok() -> Self {
         Self::default()
     }
+
+    /// Create an error response from a `Response` implementor.
+    pub fn from_error(error: impl Response) -> Self {
+        Self {
+            code: error.error_code(),
+            message: error.message(),
+            data: serde_json::Value::Null,
+            status_code: error.http_status_code(),
+        }
+    }
 }
 
 impl<T, E> From<Result<T, E>> for ApiResponse
@@ -86,18 +76,13 @@ where
     fn from(value: Result<T, E>) -> Self {
         match value {
             Ok(d) => ApiResponse::success(d),
-            Err(e) => ApiResponse {
-                code: e.error_code(),
-                message: e.message(),
-                data: serde_json::Value::default(),
-                status_code: e.http_status_code(),
-            },
+            Err(e) => ApiResponse::from_error(e),
         }
     }
 }
 
 // ============================================================================
-// Framework-specific implementations
+// Axum integration
 // ============================================================================
 
 #[cfg(feature = "axum")]
@@ -111,39 +96,6 @@ mod axum_impl {
             let status =
                 StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
             (status, axum::Json(self)).into_response()
-        }
-    }
-}
-
-#[cfg(feature = "actix")]
-mod actix_impl {
-    use super::*;
-    use actix_web::{HttpRequest, HttpResponse, Responder, body::BoxBody, http::StatusCode};
-
-    impl Responder for ApiResponse {
-        type Body = BoxBody;
-
-        fn respond_to(self, _req: &HttpRequest) -> HttpResponse<Self::Body> {
-            let status =
-                StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-            HttpResponse::build(status).json(self)
-        }
-    }
-}
-
-#[cfg(feature = "poem")]
-mod poem_impl {
-    use super::*;
-    use poem::http::StatusCode;
-    use poem::{IntoResponse, Response};
-
-    impl IntoResponse for ApiResponse {
-        fn into_response(self) -> Response {
-            let status =
-                StatusCode::from_u16(self.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-            Response::builder()
-                .status(status)
-                .body(serde_json::to_string(&self).unwrap_or_default())
         }
     }
 }
